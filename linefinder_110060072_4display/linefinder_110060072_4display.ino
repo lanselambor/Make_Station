@@ -78,24 +78,24 @@ void setup()
 	tm1637.clearDisplay();
 	tm1637.display(3,0);
 	
-	
+#if 0	// Don't erase eeprom when restarting
 	if (EEPROM.read(3)!=0)
 	{
 		for(int i=0;i<10;i++)EEPROM.write(i,0);
 		
 	}
-	
+#endif	
 	
 //==============================//
 	watchdogSetup();
 	pinMode (10,OUTPUT);
 	for(int i=0;i<2;i++)
 	{
-	digitalWrite(10,HIGH);
-	delay(500);
-	digitalWrite(10,LOW); 		
-	delay(500);	
-	doggieTickle();
+        digitalWrite(10,HIGH);
+        delay(500);
+        digitalWrite(10,LOW); 		
+        delay(500);	
+        doggieTickle();
 	}
 	//while(1);   //debug  watchdog 	
 #if DeBug	
@@ -130,13 +130,13 @@ void loop()
 #if DeBug  		
 		Serial.println(num_money);
 #endif 	
-	        for(int i=0; i<2;i++)
+	    for(int i=0; i<2;i++)
 		{
-		        EEPROM.write(i,num_money);        // Write into eeprom  
+		        EEPROM.write(i,num_money & 0xff);        // Write into eeprom  
 		        num_money = num_money >> 8;	
 		}
 
-	        while (digitalRead(linefinder) ==LOW)
+	    while (digitalRead(linefinder) ==LOW)
 		{
 			
 			doggieTickle();

@@ -33,12 +33,12 @@ volatile bool  flg_power = 0;
 void(* resetFunc) (void) = 0;  
 void watchdogSetup()
 {
-cli();  
-wdt_reset(); 
-MCUSR &= ~(1<<WDRF);  
-WDTCSR = (1<<WDCE) | (1<<WDE);
-WDTCSR = (1<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0);
-sei();
+    cli();  
+    wdt_reset(); 
+    MCUSR &= ~(1<<WDRF);  
+    WDTCSR = (1<<WDCE) | (1<<WDE);
+    WDTCSR = (1<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0);
+    sei();
 }
 ISR(WDT_vect) 
 { 
@@ -50,12 +50,6 @@ ISR(WDT_vect)
 
 //DeBug  switch 
 #define  DeBug   0
-
-
-
-
-
-
 
 #include <Servo.h> 
 // Servo position begin value
@@ -105,7 +99,7 @@ void setup()
 //==============================//	
 
 
-	myservo.attach(5);  //    mini fan use pin 9   joint use pin 5
+	myservo.attach(3);  //    mini fan use pin 9   joint use pin 3
 	previousMillis = millis();
 	myservo.write(90); 
 }

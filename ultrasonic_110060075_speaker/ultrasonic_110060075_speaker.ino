@@ -23,14 +23,10 @@ ISR(WDT_vect)
 }
 
 
-
-
-
-
 #include <Ultrasonic.h>
 #define PWM_OUT_PIN       3
 #define ULTRASONIC_PIN    A5
-#define DEFAULT_DISTANCE  1
+#define DEFAULT_DISTANCE  2
 #define DISTANCE1         DEFAULT_DISTANCE * 1
 #define DISTANCE2         DEFAULT_DISTANCE * 2
 #define DISTANCE3         DEFAULT_DISTANCE * 3
@@ -45,12 +41,7 @@ Ultrasonic ultrasonicAir(ULTRASONIC_PIN);
 unsigned int noteDurations = 50 ;
 
 
-
 #define  DeBug   0
-
-
-
-
 
 // =========  setup  =========
 void setup()

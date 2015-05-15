@@ -1,8 +1,57 @@
+#include <TimerOne.h>
 
-#define vs 1
-#define THRESHOLD 150
+#define VS 1
 
-#if vs
+#define MOTOR_SPEED 2
+#define TIMER_TIME 50000   //interrupt time 50ms
+#define THRESHOLD 120
+
+int loudness = A5;
+int motor = 3;
+static float dat = 0;
+volatile bool Motor_Sleep = false;
+
+void setup() {  
+  Serial.begin(9600);
+  pinMode(loudness, INPUT);
+  pinMode(motor,OUTPUT);
+  
+  dat = analogRead(loudness);
+  
+  Timer1.initialize(TIMER_TIME);//timing for 50ms
+  Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
+}
+
+void TimingISR(void)
+{   
+    static int cnt = 0;
+    const int TIMEOUT = 500;  //500ms
+    cnt++;
+    if(TIMEOUT == cnt * 50)    
+    {
+        Motor_Sleep = true;
+        cnt = 0;
+    }
+    dat = dat * 0.70 + analogRead(loudness) * 0.30;
+    
+}
+
+void loop() {
+  if( THRESHOLD < dat )
+  {
+    analogWrite(motor, MOTOR_SPEED);
+    delay(50);
+  }
+  analogWrite(motor, 0);   
+  delay(80);
+  
+#if VS  
+  Data_acquisition(dat,0,0,0);
+#endif  
+
+}
+
+#if VS
 float OutData[4]={0};
 
 unsigned short CRC_CHECK(unsigned char *Buf, unsigned char CRC_CNT)
@@ -59,42 +108,12 @@ void OutPut_Data(void)
 
 void Data_acquisition(float temp1,float temp2,float temp3,float temp4)
 {
-       OutData[0] = temp1;
-       OutData[1] = temp2;
-       OutData[2] = temp3; 
-       OutData[3] = temp4;
-       OutPut_Data();
+   OutData[0] = temp1;
+   OutData[1] = temp2;
+   OutData[2] = temp3; 
+   OutData[3] = temp4;
+   OutPut_Data();
 }
 
 #endif
 
-
-int loudness = A5;
-int motor = 3;
-
-void setup() {  
-  Serial.begin(9600);
-  pinMode(loudness, INPUT);
-  pinMode(motor,OUTPUT);
-}
-
-void loop() {
-#if 1 
-  static float dat = analogRead(loudness); 
-  dat = dat * 0.95 + analogRead(loudness) * 0.05;
-  if(THRESHOLD < dat)
-  {
-    analogWrite(motor, 10);
-    //delay(100);
-  }
-  else
-  {
-    analogWrite(motor, 0);
-  }
-  //delay(200);
-#endif
-
-  Data_acquisition(dat,0,0,0);
-  
-
-}

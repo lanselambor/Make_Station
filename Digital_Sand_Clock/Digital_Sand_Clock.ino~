@@ -29,7 +29,7 @@
 
 #define CLK 5
 #define DIO 6
-MyTM1637 tm1637(CLK,DIO);
+TM1637 tm1637(CLK,DIO);
 
 #define ON 1
 #define OFF 0

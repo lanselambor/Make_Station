@@ -27,8 +27,8 @@
 
 #define TILT_PIN A5
 
-#define CLK 5
-#define DIO 6
+#define CLK 3
+#define DIO 5
 MyTM1637 tm1637(CLK,DIO);
 
 #define ON 1
@@ -96,7 +96,11 @@ void loop()
                 TimeUpdate();
                 tm1637.display(TimeDisp,DISPLAY_FLAG_F);
         }   
-         
+
+        /** Here you type in a number as minutes,
+          * for the 4 digital display can only show the largest time 99:59,
+          * you should type in numbers between 0000 ~ 0100.
+          */         
         String inString = "";
         unsigned int timeValue = 0;
         unsigned char bitCount = 0; 

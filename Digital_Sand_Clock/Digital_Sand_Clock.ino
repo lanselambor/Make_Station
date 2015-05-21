@@ -61,6 +61,8 @@ void setup()
         Timer1.initialize(500000);//timing for 500ms
         Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
         
+        EEPROM.write(0,MinuteMax); //Setting minuteMax, the initial value of count time  max.
+        
         MinuteMax = EEPROM.read(0);
         Serial.print("Read time max is: ");
         Serial.print(MinuteMax);

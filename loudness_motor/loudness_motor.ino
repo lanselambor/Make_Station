@@ -1,25 +1,64 @@
+/*
+* Digital Sand Clock.ino
+* A demo for ChaiHuo ZaoWuBa Demo
+* 
+* Copyright (c) 2015 Seeed Technology Inc.
+* Auther     : Lambor.Fang
+* Create Time: May 2015
+* Change Log :
+* 
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation; either
+* version 2.1 of the License, or (at your option) any later version.
+* 
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this library; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+*/
 #include <TimerOne.h>
+#include "WatchDog.h"
 
-#define VS 1
+
+#define DEBUG 0   //enable debug
 
 #define MOTOR_SPEED 2
 #define TIMER_TIME 50000   //interrupt time 50ms
-#define THRESHOLD 120
+#define THRESHOLD 30
 
-int loudness = A5;
+int sound_pin = A5;
 int motor = 3;
-static float dat = 0;
+volatile float sound_value = 0.0;
+volatile float quiet_value = 0.0;
 volatile bool Motor_Sleep = false;
 
+
 void setup() {  
-  Serial.begin(9600);
-  pinMode(loudness, INPUT);
-  pinMode(motor,OUTPUT);
-  
-  dat = analogRead(loudness);
-  
-  Timer1.initialize(TIMER_TIME);//timing for 50ms
-  Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
+	//initial WatchDog
+	WTD.watchdogSetup();
+	WTD.doggieTickle();
+
+	Serial.begin(9600);
+	pinMode(sound_pin, INPUT);
+	pinMode(motor,OUTPUT);
+
+	//calculate out a quiet starting average value 
+	delay(100);
+	long tmp = 0, sample_num = 1000;
+	for(int i=0; i<sample_num; i++)
+	{
+		tmp += analogRead(sound_pin);
+		delayMicroseconds(10);
+	}
+	quiet_value = tmp / sample_num;  
+
+	Timer1.initialize(TIMER_TIME);//timing for 50ms
+	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
 }
 
 void TimingISR(void)
@@ -32,26 +71,27 @@ void TimingISR(void)
         Motor_Sleep = true;
         cnt = 0;
     }
-    dat = dat * 0.70 + analogRead(loudness) * 0.30;
-    
+    sound_value = sound_value * 0.70 + analogRead(sound_pin) * 0.30;
 }
 
-void loop() {
-  if( THRESHOLD < dat )
-  {
-    analogWrite(motor, MOTOR_SPEED);
-    delay(50);
-  }
-  analogWrite(motor, 0);   
-  delay(80);
+void loop() 
+{
+	if( THRESHOLD < (sound_value - quiet_value ) )
+	{
+		analogWrite(motor, MOTOR_SPEED);
+		delay(50);
+	}
+	analogWrite(motor, 0);   
+	delay(80);
   
-#if VS  
-  Data_acquisition(dat,0,0,0);
+#if DEBUG  
+	Data_acquisition(sound_value,sound_value - quiet_value,quiet_value,0);
 #endif  
-
+	WTD.doggieTickle();
+	delay(20);
 }
 
-#if VS
+#if DEBUG
 float OutData[4]={0};
 
 unsigned short CRC_CHECK(unsigned char *Buf, unsigned char CRC_CNT)

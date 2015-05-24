@@ -21,64 +21,58 @@
 * License along with this library; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
-
-#include <Wire.h>
+#include "WatchDog.h"
 #include "VisualScope.h"
-#include "TimerOne.h"
 
-//Watchdog setting
-#include <avr/wdt.h>
-#define doggieTickle() resetTime = millis()
-#define TIMEOUTPERIOD 2000
-unsigned long resetTime = 0;
-volatile bool  flg_power = 0;
-void(* resetFunc) (void) = 0;  
-
-void watchdogSetup()
-{
-    cli();  
-    wdt_reset(); 
-    MCUSR &= ~(1<<WDRF);  
-    WDTCSR = (1<<WDCE) | (1<<WDE);
-    WDTCSR = (1<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0);
-    sei();
-}
-ISR(WDT_vect) 
-{ 
-  if(millis() - resetTime > TIMEOUTPERIOD){
-    doggieTickle();                                          
-    resetFunc();     
-  }
-}
+VisualScope vs;
 
 //DeBug  switch 
-#define  DeBug   1
+#define  DeBug   0
 
 #include <Servo.h> 
 // Servo position begin value
 #define pos_begin  80
 // Servo position end value
 #define pos_end    100
+// Create servo object to control a servo
+Servo myservo;
 
 // Sound sensor pin input define
 const int pin_sound = A5;
 
 //sound analog value
+int quiet_value = 0; 
 int val_sound = 0;
 
-// Create servo object to control a servo
-Servo myservo;   
+//sound threshold
+int thershold_off = 30;
+int Threshold[5] = {40 + thershold_off, 
+                    60 + thershold_off, 
+					80 + thershold_off,
+					100 + thershold_off, 
+					120 + thershold_off};
+   
 
 const long interval = 50;
 unsigned long previousMillis = 0;
 unsigned long currentMillis  = 0;
 
-#define  interval_val   100
 
 void setup()
-{
-/*============ Watch Dog ============*/
-  watchdogSetup();
+{ 
+  //initial watchdog  
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
+  
+  //get quiet sound value
+  delay(500);
+  long tmp = 0;
+  for(int i = 0;i<1000;i++)
+  {
+	  tmp += analogRead(pin_sound);
+  }
+  quiet_value = tmp / 1000;
+  
   pinMode (10,OUTPUT);
   for(int i=0;i<2;i++)
   {
@@ -86,9 +80,9 @@ void setup()
     delay(500);
     digitalWrite(10,LOW);     
     delay(500);  
-    doggieTickle();
+    WTD.doggieTickle();
   } 
-  //while(1);   //debug  watchdog   
+
 #if DeBug  
   Serial.begin(9600);
   Serial.println("start");
@@ -104,43 +98,49 @@ void setup()
 // =========  Loop  =========
 void loop()
 {  
-  currentMillis = millis();
+	currentMillis = millis();
   
-  if(currentMillis - previousMillis > interval)
-  {  
-    doggieTickle();                 
-    val_sound = average_filter(pin_sound, 200); 
-    Data_acquisition(val_sound,0,0,0);
-    //Serial.println (val_sound);
-    if ((val_sound > 150)&&(val_sound < 200))
+//  if(currentMillis - previousMillis > interval)
+//  {  
+    WTD.doggieTickle();                 
+    //val_sound = average_filter(pin_sound, 1); 
+	//val_sound = analogRead(pin_sound);
+	val_sound = mid_filter(pin_sound); 
+#if DeBug	
+	vs.Data_acquisition(val_sound,quiet_value,0,0);
+	//Serial.println (val_sound);
+#endif	
+   
+	int threshold = val_sound - quiet_value;
+    if ((threshold > Threshold[0])&&(threshold <= Threshold[1]))
     {         
       myservo.write(pos_begin - 10);   
       delay_feed(5*10);
       myservo.write(pos_end + 10);    
       delay_feed(5*10);
     }              
-    else if ((val_sound > 200)&&(val_sound < 300))
+    else if ((threshold > Threshold[1])&&(threshold <= Threshold[2]))
     {     
       myservo.write(pos_begin);   
       delay_feed(5*20);
       myservo.write(pos_end);    
       delay_feed(5*20);
     }             
-    else if ((val_sound > 300)&&(val_sound < 350))
+    else if ((threshold > Threshold[2])&&(threshold <= Threshold[3]))
     {         
       myservo.write(pos_begin - 10);   
       delay_feed(5*40);
       myservo.write(pos_end + 10);    
       delay_feed(5*40);
     }                  
-	  else if ((val_sound > 350)&&(val_sound < 400))
+	  else if ((threshold > Threshold[3])&&(threshold <= Threshold[4]))
     {       
       myservo.write(pos_begin - 20);   
       delay_feed(5*60);
       myservo.write(pos_end + 20);    
       delay_feed(5*60);
     }                 
-    else if ((val_sound > 400)&&(val_sound < 450))
+    else if ((threshold > Threshold[4])&&(threshold <= Threshold[5]))
     {         
       myservo.write(pos_begin - 30);   
       delay_feed(5*80);
@@ -149,19 +149,30 @@ void loop()
     }
     previousMillis = millis();
   
-    //delay(80);
-    doggieTickle(); 
-  }  
+    
+    WTD.doggieTickle(); 
+	delay(80);
+//  }  
 }
 
 // Delay with feed dog
 void delay_feed( int val)
 {
-       delay(val);
-     doggieTickle(); 
+	delay(val);
+	WTD.doggieTickle(); 
 
 }
-
+int mid_filter(int analog_pin)
+{
+	int a = analogRead(analog_pin);
+	delayMicroseconds(10);
+	int b = analogRead(analog_pin);
+	delayMicroseconds(10);
+	int c = analogRead(analog_pin);
+	delayMicroseconds(10);
+	
+	return midNum(&a, &b, &c);
+}
 int average_filter(int analog_pin, int num)
 {
   long temp = 0;
@@ -172,5 +183,24 @@ int average_filter(int analog_pin, int num)
   return temp/num;
 }
 
-
+int midNum(int *a, int *b, int *c)
+{
+	int tmp = 0;
+	if(*a > *b){
+		tmp = *a;
+		*a = *b;
+		*b = tmp;
+	}
+	if(*b > *c){
+		tmp = *b;
+		*b = *c;
+		*c = tmp;
+	}
+	if(*b > *c){
+		tmp = *b;
+		*b = *c;
+		*c = tmp;
+	}
+	return *b;
+}
 

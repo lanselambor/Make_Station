@@ -5,7 +5,7 @@
 * Copyright (c) 2015 Seeed Technology Inc.
 * Auther     : Jacob.Yan
 * Create Time: Jan 07, 2015
-* Change Log :
+* Change Log : Lambor modified and update at May 2015
 * 
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -21,33 +21,7 @@
 * License along with this library; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
-
-//Watchdog setting
-#include <avr/wdt.h>
-#define doggieTickle() resetTime = millis()
-#define TIMEOUTPERIOD 2000
-unsigned long resetTime = 0;
-volatile bool  flg_power = 0;
-void(* resetFunc) (void) = 0;  
-void watchdogSetup()
-{
-cli();  
-wdt_reset(); 
-MCUSR &= ~(1<<WDRF);  
-WDTCSR = (1<<WDCE) | (1<<WDE);
-WDTCSR = (1<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0);
-sei();
-}
-ISR(WDT_vect) 
-{ 
-  static int i = 0;
-  if(millis() - resetTime > TIMEOUTPERIOD){    
-    Serial.println(++i);
-    doggieTickle();                                          
-	resetFunc();     
-  }
-  
-}
+#include "WatchDog.h"
 
 //DeBug  switch 
 #define  DeBug   0
@@ -67,12 +41,11 @@ int end = 0;
 
 // =========  Setup  =========
 void setup()
-{
-	pinMode (linefinder,INPUT);
-
-    watchdogSetup();
-	doggieTickle();
+{		   
+	WTD.watchdogSetup();
+	WTD.doggieTickle();
 	
+	pinMode (linefinder,INPUT);
 	tm1637.init();
 	tm1637.set(BRIGHT_TYPICAL);	
 	tm1637.clearDisplay();
@@ -87,7 +60,6 @@ void setup()
 #endif	
 	
 //==============================//
-	watchdogSetup();
 	pinMode (10,OUTPUT);
 	for(int i=0;i<2;i++)
 	{
@@ -95,7 +67,7 @@ void setup()
         delay(500);
         digitalWrite(10,LOW); 		
         delay(500);	
-        doggieTickle();
+        WTD.doggieTickle();
 	}
 	//while(1);   //debug  watchdog 	
 #if DeBug	
@@ -111,16 +83,16 @@ void loop()
 {			
 
 
-	doggieTickle();
+	WTD.doggieTickle();
          
-        // Keep reading from eeprom ,then display data on 4-digital segment
+    // Keep reading from eeprom ,then display data on 4-digital segment
 	num_money = EEPROM.read(1);
 	num_money = num_money << 8;	                   // Read form eeprom 
 	num_money = num_money + EEPROM.read(0);	
 	
 	display_seg(num_money);   
 
-        // If detect proximity
+    // If detect proximity
 	if (digitalRead(linefinder)==LOW)                  // When detect proximity ,output LOW  
 	{
 		begin = millis();
@@ -139,7 +111,7 @@ void loop()
 	    while (digitalRead(linefinder) ==LOW)
 		{
 			
-			doggieTickle();
+			WTD.doggieTickle();
 			end = millis();
 			if (end - begin >3000)
 			{
@@ -162,13 +134,7 @@ void display_seg(uint16_t num_money)
 	ListDisp[1] = (num_money/10)%10;	
 	ListDisp[2] = (num_money/100)%10;
 	ListDisp[3] = (num_money/1000)%10;	
-	/*
-		tm1637.display(0,ListDisp[3]);
-		tm1637.display(1,ListDisp[2]); 
-		tm1637.display(2,ListDisp[1]);
-		tm1637.display(3,ListDisp[0]);	
-	
-	*/
+
 	if (ListDisp[3]!=0)
 	{
 		tm1637.display(0,ListDisp[3]);

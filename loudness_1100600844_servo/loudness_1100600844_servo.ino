@@ -27,7 +27,7 @@
 VisualScope vs;
 
 //DeBug  switch 
-#define  DeBug   0
+#define  DeBug   1
 
 #include <Servo.h> 
 // Servo position begin value
@@ -44,8 +44,9 @@ const int pin_sound = A5;
 int quiet_value = 0; 
 int val_sound = 0;
 
-//sound threshold
+//value off the thershold, 
 int thershold_off = 30;
+//sound threshold
 int Threshold[5] = {40 + thershold_off, 
                     60 + thershold_off, 
 					80 + thershold_off,
@@ -100,59 +101,58 @@ void loop()
 {  
 	currentMillis = millis();
   
-//  if(currentMillis - previousMillis > interval)
-//  {  
+  if(currentMillis - previousMillis > interval)
+  {  
     WTD.doggieTickle();                 
-    //val_sound = average_filter(pin_sound, 1); 
-	//val_sound = analogRead(pin_sound);
-	val_sound = mid_filter(pin_sound); 
+    val_sound = average_filter(pin_sound, 50); 
+	
 #if DeBug	
 	vs.Data_acquisition(val_sound,quiet_value,0,0);
 	//Serial.println (val_sound);
 #endif	
    
 	int threshold = val_sound - quiet_value;
-    if ((threshold > Threshold[0])&&(threshold <= Threshold[1]))
+	if((threshold > Threshold[4]))
     {         
-      myservo.write(pos_begin - 10);   
-      delay_feed(5*10);
-      myservo.write(pos_end + 10);    
-      delay_feed(5*10);
-    }              
-    else if ((threshold > Threshold[1])&&(threshold <= Threshold[2]))
-    {     
-      myservo.write(pos_begin);   
-      delay_feed(5*20);
-      myservo.write(pos_end);    
-      delay_feed(5*20);
-    }             
-    else if ((threshold > Threshold[2])&&(threshold <= Threshold[3]))
-    {         
-      myservo.write(pos_begin - 10);   
-      delay_feed(5*40);
-      myservo.write(pos_end + 10);    
-      delay_feed(5*40);
-    }                  
-	  else if ((threshold > Threshold[3])&&(threshold <= Threshold[4]))
-    {       
-      myservo.write(pos_begin - 20);   
-      delay_feed(5*60);
-      myservo.write(pos_end + 20);    
-      delay_feed(5*60);
-    }                 
-    else if ((threshold > Threshold[4])&&(threshold <= Threshold[5]))
-    {         
-      myservo.write(pos_begin - 30);   
-      delay_feed(5*80);
-      myservo.write(pos_end + 30);    
-      delay_feed(5*80);
+		myservo.write(pos_begin - 30);   
+		delay_feed(5*80);
+		myservo.write(pos_end + 30);    
+		delay_feed(5*80);
     }
-    previousMillis = millis();
-  
+	else if((threshold > Threshold[3]))
+    {       
+		myservo.write(pos_begin - 20);   
+		delay_feed(5*60);
+		myservo.write(pos_end + 20);    
+		delay_feed(5*60);
+    }
+	else if((threshold > Threshold[2]))
+    {         
+		myservo.write(pos_begin - 10);   
+		delay_feed(5*40);
+		myservo.write(pos_end + 10);    
+		delay_feed(5*40);
+    }
+	else if((threshold > Threshold[1]))
+    {     
+		myservo.write(pos_begin);   
+		delay_feed(5*20);
+		myservo.write(pos_end);    
+		delay_feed(5*20);
+    }	
+    else if((threshold > Threshold[0]))
+    {         
+		myservo.write(pos_begin - 10);   
+		delay_feed(5*10);
+		myservo.write(pos_end + 10);    
+		delay_feed(5*10);
+    }              
+                                     	                    
+    previousMillis = millis(); 
     
     WTD.doggieTickle(); 
-	delay(80);
-//  }  
+	//delay(80);
+  }  
 }
 
 // Delay with feed dog
@@ -178,7 +178,8 @@ int average_filter(int analog_pin, int num)
   long temp = 0;
   for(int i=0;i<num;i++)
   {
-    temp += analogRead(analog_pin);    
+    //temp += analogRead(analog_pin);    
+	temp += mid_filter(analog_pin);    
   }
   return temp/num;
 }

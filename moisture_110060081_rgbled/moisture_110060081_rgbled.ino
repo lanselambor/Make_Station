@@ -22,35 +22,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-//Watchdog setting
-#include <avr/wdt.h>
-#define doggieTickle() resetTime = millis()
-#define TIMEOUTPERIOD 2000
-
-#define  ENABLE_WTD  0
-
-unsigned long resetTime = 0;
-volatile bool  flg_power = 0;
-void(* resetFunc) (void) = 0;  
-
-#if ENABLE_WTD
-void watchdogSetup()
-{
-cli();  
-wdt_reset(); 
-MCUSR &= ~(1<<WDRF);  
-WDTCSR = (1<<WDCE) | (1<<WDE);
-WDTCSR = (1<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0);
-sei();
-}
-ISR(WDT_vect) 
-{ 
-  if(millis() - resetTime > TIMEOUTPERIOD){
-    doggieTickle();                                          
-	resetFunc();     
-  }
-}
-#endif
+#include "WatchDog.h"
 
 
 //DeBug  switch 
@@ -70,26 +42,21 @@ int val_sound = 0;
 // =========  Setup  =========
 void setup()
 {
-
+	WTD.watchdogSetup();
+	WTD.doggieTickle();
 	
-        // This initializes the NeoPixel library.
 	pixels.begin(); 
-//==============================//
-
-#if ENABLE_WTD
-	watchdogSetup();
-#endif
     
 	pinMode (10,OUTPUT);
 	for(int i=0;i<2;i++)
 	{
-	digitalWrite(10,HIGH);
-	delay(500);
-	digitalWrite(10,LOW); 		
-	delay(500);	
-	doggieTickle();
+		digitalWrite(10,HIGH);
+		delay(500);
+		digitalWrite(10,LOW); 		
+		delay(500);	
+		WTD.doggieTickle();
 	}
-	//while(1);   //debug  watchdog 	
+	
 #if DeBug	
     Serial.begin(9600);
 	Serial.println("start");
@@ -100,12 +67,7 @@ void setup()
 // =========  Loop  =========
 void loop()
 {
-    
-
-    
-#if ENABLE_WTD
-	doggieTickle();
-#endif
+	WTD.doggieTickle();
     
 	uint16_t val = analogRead(analogPin_in);   
 #if DeBug	

@@ -53,6 +53,16 @@ void setup()
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	
+	pinMode (10,OUTPUT);
+	for(int i=0;i<2;i++)
+	{
+		digitalWrite(10,HIGH);
+		delay(500);
+		digitalWrite(10,LOW); 		
+		delay(500);	
+		WTD.doggieTickle();
+	}
+	
 	Serial.begin(9600);
 	Serial.print("Digital sand clock Test.\r\n"); 
 
@@ -61,7 +71,7 @@ void setup()
 	tm1637.clearDisplay();
 
 	pinMode(TILT_PIN,INPUT_PULLUP); 
-
+	
 	Timer1.initialize(500000);//timing for 500ms
 	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
 
@@ -72,8 +82,7 @@ void setup()
 	Serial.print(MinuteMax);
 	Serial.print(" minutes.\r\n");
 
-	minute = MinuteMax;        
-	delay(1000);   
+	minute = MinuteMax;	
 }
 
 void loop()
@@ -102,7 +111,8 @@ void loop()
 		TimeUpdate();
 		tm1637.display(TimeDisp,DISPLAY_FLAG_F);
 	}   
-
+	
+#if 0  
 	/** Here you type in a number as minutes,
 	  * for the 4 digital display can only show the largest time 99:59,
 	  * you should type in numbers between 0000 ~ 0100.
@@ -148,6 +158,7 @@ void loop()
 			}  
 		}
 	}  
+#endif
 	
 	WTD.doggieTickle();	
 }
@@ -174,6 +185,8 @@ void TimingISR()
 		}
 		ClockPoint = (~ClockPoint) & 0x01;
 	}
+	
+	WTD.doggieTickle();   
 }
 
 void TimeUpdate(void)

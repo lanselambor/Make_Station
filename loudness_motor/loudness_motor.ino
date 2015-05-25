@@ -56,7 +56,18 @@ void setup() {
 		delayMicroseconds(10);
 	}
 	quiet_value = tmp / sample_num;  
-
+	
+	//start light
+	pinMode (10,OUTPUT);
+	for(int i=0;i<2;i++)
+	{
+		digitalWrite(10,HIGH);
+		delay(500);
+		digitalWrite(10,LOW);     
+		delay(500);  
+		WTD.doggieTickle();
+	}
+  
 	Timer1.initialize(TIMER_TIME);//timing for 50ms
 	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
 }

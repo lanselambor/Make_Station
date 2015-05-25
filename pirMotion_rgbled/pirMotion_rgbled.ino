@@ -34,6 +34,16 @@ void setup() {
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	
+	pinMode (10,OUTPUT);
+	for(int i=0;i<2;i++)
+	{
+		digitalWrite(10,HIGH);
+		delay(500);
+		digitalWrite(10,LOW); 		
+		delay(500);	
+		WTD.doggieTickle();
+	}
+	
 	Serial.begin(9600);
 	pinMode(led, OUTPUT);
 	pinMode(pir, INPUT);

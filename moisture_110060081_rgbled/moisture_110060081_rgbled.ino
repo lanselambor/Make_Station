@@ -39,9 +39,12 @@ int val_sound = 0;
 
 #define lightness  2
 
-// =========  Setup  =========
 void setup()
-{
+{	
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);	
+	
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	

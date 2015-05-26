@@ -61,38 +61,42 @@ unsigned long currentMillis  = 0;
 
 void setup()
 { 
-  //initial watchdog  
-  WTD.watchdogSetup();
-  WTD.doggieTickle();
-  
-  //get quiet sound value
-  delay(500);
-  long tmp = 0;
-  for(int i = 0;i<1000;i++)
-  {
-	  tmp += analogRead(pin_sound);
-  }
-  quiet_value = tmp / 1000;
-  
-  pinMode (10,OUTPUT);
-  for(int i=0;i<2;i++)
-  {
-    digitalWrite(10,HIGH);
-    delay(500);
-    digitalWrite(10,LOW);     
-    delay(500);  
-    WTD.doggieTickle();
-  } 
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);
+	
+	//initial watchdog  
+	WTD.watchdogSetup();
+	WTD.doggieTickle();
 
-#if DeBug  
-  Serial.begin(9600);
-  Serial.println("start");
-#endif    
-//============ end ===========//  
+	//get quiet sound value
+	delay(500);
+	long tmp = 0;
+	for(int i = 0;i<1000;i++)
+	{
+		tmp += analogRead(pin_sound);
+	}
+	quiet_value = tmp / 1000;
 
-  myservo.attach(3);  //    mini fan use pin 9   joint use pin 3
-  previousMillis = millis();
-  myservo.write(90); 
+	pinMode (10,OUTPUT);
+	for(int i=0;i<2;i++)
+	{
+		digitalWrite(10,HIGH);
+		delay(500);
+		digitalWrite(10,LOW);     
+		delay(500);  
+		WTD.doggieTickle();
+	} 
+
+	#if DeBug  
+	Serial.begin(9600);
+	Serial.println("start");
+	#endif    
+	//============ end ===========//  
+
+	myservo.attach(3);  //    mini fan use pin 9   joint use pin 3
+	previousMillis = millis();
+	myservo.write(90); 
 
 }
 

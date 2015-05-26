@@ -38,7 +38,12 @@ volatile float quiet_value = 0.0;
 volatile bool Motor_Sleep = false;
 
 
-void setup() {  
+void setup() 
+{ 
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);
+	
 	//initial WatchDog
 	WTD.watchdogSetup();
 	WTD.doggieTickle();

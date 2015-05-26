@@ -42,6 +42,10 @@ int end = 0;
 // =========  Setup  =========
 void setup()
 {		   
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);
+	
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	

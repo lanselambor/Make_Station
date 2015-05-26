@@ -46,11 +46,15 @@ int quiet_value = 0;
 // =========  Setup  =========
 void setup()
 {
-	
-    pixels.begin(); 
-	
-//==============================//
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);
+	    
 	WTD.watchdogSetup();
+	WTD.doggieTickle();
+	
+	pixels.begin(); 
+	
 	pinMode (10,OUTPUT);
 	for(int i=0;i<2;i++)
 	{
@@ -59,8 +63,7 @@ void setup()
 		digitalWrite(10,LOW); 		
 		delay(500);	
 		WTD.doggieTickle();
-	}
-	//while(1);   //debug  watchdog 
+	}	
 
 	//initial sound sensor
 	long tmp=0, ave_num = 1000;

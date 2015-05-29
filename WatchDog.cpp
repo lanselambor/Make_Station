@@ -24,7 +24,7 @@
 #include "WatchDog.h"
 #include <Arduino.h>
 
-WatchDog WTD(2000);
+WatchDog WTD(2000);   //watchdog time out 2 seconds
 
 ISR(WDT_vect) 
 { 	

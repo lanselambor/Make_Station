@@ -23,6 +23,7 @@
 */
 #include "WatchDog.h"
 #include "Ultrasonic.h"
+#include <Wire.h>
 
 #define  DeBug  0
 

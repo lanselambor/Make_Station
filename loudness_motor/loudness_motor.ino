@@ -23,7 +23,7 @@
 */
 #include <TimerOne.h>
 #include "WatchDog.h"
-
+#include <Wire.h>
 
 #define DEBUG 0   //enable debug
 

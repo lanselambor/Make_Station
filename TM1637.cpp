@@ -58,7 +58,7 @@ bool TM1637::writeByte(int8_t wr_data)
   while(digitalRead(Datapin))    
   { 
     count1 +=1;
-    if(  == 200)//
+    if(count1 == 200)//
     {
      pinMode(Datapin,OUTPUT);
      digitalWrite(Datapin,LOW);

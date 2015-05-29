@@ -22,67 +22,127 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include "WatchDog.h"
+#include <TimerOne.h>
+#include <Wire.h>
 
 #define  DeBug   0
 
-const int linefinder =A5;
-const int recorder = 3;
-const int time_to_drink = 5000;
+#define BUTTON         2
+#define LIGHT_SENSOR   A0
+#define CHRG_LED       A3  //low-level work
+#define PWR_HOLD       A1  
+#define PWR            6   //low-level work
+#define KEY            2
+#define LED            10  
+#define OUT_PIN1       3   //normal output pin
+#define OUT_PIN2       5
+#define IN_PIN1        A5  //normal input pin
+#define IN_PIN2        A4
 
+#define LINE_FINDER_FIND       (LOW == digitalRead(IN_PIN1))   //something cover the sensor
+#define LINE_FINDER_NOTFIND    (HIGH == digitalRead(IN_PIN1)) //nothing cover the sensor
+
+const int linefinder               = IN_PIN1;
+const int recorder                 = OUT_PIN1;
+const unsigned long time_to_drink  = 2700000;   //unit: Ms. 2700000 Ms = 45 Min, time for not drinking water 
+volatile unsigned long timeCounter = 0;
 void setup()
-{		   
+{	
+	//power up
+	pinMode(CHRG_LED, OUTPUT);
+	digitalWrite(CHRG_LED, LOW);
+	
+  //initial watchdog   
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	
+  //initial devices
 	pinMode(linefinder,INPUT);    
 	pinMode(recorder, OUTPUT);
 	digitalWrite(recorder, LOW);
 	
-	pinMode (10,OUTPUT);
-	for(int i=0;i<2;i++)
-	{
-        digitalWrite(10,HIGH);
-        delay(500);
-        digitalWrite(10,LOW); 		
-        delay(500);	
-        WTD.doggieTickle();
-	}	
+	LEDShine(2, 1000);
 	
 #if DeBug	
-    Serial.begin(9600);
+  Serial.begin(9600);
 	Serial.println("start");
 #endif  	
-
+  Timer1.initialize(50000);//timing for 50ms
+	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR 
+  noInterrupts();
 }
 
-void speak()
-{
-	digitalWrite(recorder, HIGH);
-	delay(1000);
-	digitalWrite(recorder, LOW);
-	WTD.doggieTickle(); 
-	delay(1000);
-	digitalWrite(recorder, HIGH);
-	WTD.doggieTickle(); 
-	delay(1000);
-	digitalWrite(recorder, LOW);
-	WTD.doggieTickle(); 
-	delay(1000);
+void TimingISR(void)
+{   
+  timeCounter++;
 }
+
 void loop()
 {			
-	volatile long timing = millis();
-	
-	while(!digitalRead(linefinder))
+  if (LINE_FINDER_NOTFIND)
+  {
+    speak(1,2);
+    while(LINE_FINDER_NOTFIND)
+    {
+      WTD.doggieTickle();
+      delay(5);
+    }
+  }
+	else if (LINE_FINDER_FIND)
 	{
-		if( (millis() - timing) > time_to_drink )
-		{
-			speak();  			
-			timing = millis();
+    interrupts();
+		while(LINE_FINDER_FIND)
+    {
+      if( timeCounter * 50 > time_to_drink )
+      {
+        #if DeBug
+        Serial.print("duration: ");
+        Serial.println(timeCounter * 50);
+        #endif
+        speak(3, 10);
+        timeCounter = 0;  			
+      } 
+      WTD.doggieTickle();
 		}
-		
-		WTD.doggieTickle();           
+    noInterrupts();
+	}            
+}
+
+/* Function   : void LEDShine(int times, int freqMs)
+ * parameters : times: counting times of shining;
+ *              freqMs: shining frequency in microseconds
+ */
+void LEDShine(int times, int freqMs)
+{
+  pinMode (LED,OUTPUT);
+	for(int i=0;i<times;i++)
+	{
+        analogWrite(LED,5);
+        delay(freqMs/2);
+        analogWrite(LED,0); 		
+        delay(freqMs/2);	
+        WTD.doggieTickle();
 	}
-	delay(100);
-	WTD.doggieTickle();           
+}
+
+void speak(int times, int seconds)
+{
+  for(int i=0; i<times; i++)
+  {
+    
+    digitalWrite(recorder, HIGH);
+    delaySeconds(seconds);    
+    digitalWrite(recorder, LOW);
+    delaySeconds(1);
+
+  }
+}
+
+void delaySeconds(int seconds)
+{
+  for(int j=0; j<seconds; j++)  //delay seconds
+  {
+    WTD.doggieTickle(); 
+    delay(1000);
+  }
 }

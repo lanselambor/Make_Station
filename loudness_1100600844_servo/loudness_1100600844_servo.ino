@@ -23,6 +23,7 @@
 */
 #include "WatchDog.h"
 #include "VisualScope.h"
+#include <Wire.h>
 
 VisualScope vs;
 

@@ -25,30 +25,31 @@
 #include "Ultrasonic.h"
 #include "TimerOne.h"
 #include "SoftwareSerial.h"
+#include <Wire.h>
 
-#define DeBug  1
+#define DeBug  0
 
-#define MAN_LEAVE 10  //nothing close inside 10cm
+#define MAN_LEAVE 10  // sitting distance 
 
 int vibration_pin = 3;
 int ultrasonic_pin = A5;
 volatile uint16_t distance = 0;
 volatile long timing = 0;
 
-
 Ultrasonic ultrasonicAir(ultrasonic_pin);
-unsigned int noteDurations = 50 ;
-boolean playBack = false;
-
 
 void setup()
 { 
+	//power up
+	pinMode(6, OUTPUT);
+	digitalWrite(6, LOW);
+	
 	WTD.watchdogSetup();
 	WTD.doggieTickle();
 	
 	pinMode(vibration_pin,OUTPUT);
 	pinMode(ultrasonic_pin,INPUT);
-	
+		
 	pinMode (10,OUTPUT);
 	for(int i=0;i<2;i++)
 	{

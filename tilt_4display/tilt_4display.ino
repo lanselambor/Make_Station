@@ -25,6 +25,7 @@
 #include <EEPROM.h>
 #include "MyTM1637.h"
 #include "WatchDog.h"
+#include <Wire.h>
 
 #define TILT_PIN A5
 

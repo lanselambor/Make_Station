@@ -23,6 +23,7 @@
 */
 
 #include "WatchDog.h"
+#include <Wire.h>
 
 
 //DeBug  switch 

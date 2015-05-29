@@ -22,10 +22,9 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include "WatchDog.h"
+#include <Wire.h>
 
-#define DEBUG 0
-
-#define LIGHT_UP_TIME 4000//10*60*1000
+#define LIGHT_UP_TIME 60000//10*60*1000  1 minute delay
 
 int led = 3;  //led control output pin
 int pir = A5;   //PIR_Sensor input pin
@@ -47,57 +46,48 @@ void setup() {
 	Serial.begin(9600);
 	pinMode(led, OUTPUT);
 	pinMode(pir, INPUT);
-  
+	analogWrite(led,255);
+	delay(500);
 }
 
 void loop() {
 	if(digitalRead(pir))
-	{
-		unsigned long begin = millis();
-
+	{		
+		//turn on the light
 		for(int i=255; i >= 0; i--)
 		{
-			long y = cal_circle_y(i, 255); 
-#if DEBUG			
-			Serial.println(y);    
-#endif			
+			long y = cal_circle_y(i, 255); 	
 			analogWrite(led,y);
+			
+			WTD.doggieTickle();
 			delay(10);      
-		}    
-
+		}   
+		
+		unsigned long begin = millis();
+		
 		while(LIGHT_UP_TIME > millis() - begin)
 		{
 			if(digitalRead(pir))
 			{
 				begin = millis();
 			}
+			
+			WTD.doggieTickle();	
+			delay(10);
+		}
+		
+		//Turn off the light
+		for(int i = 0; i<=255; i++)
+		{
+			long y = cal_circle_y(i, 255);  	
+			analogWrite(led,y);
+			
+			WTD.doggieTickle();
+			delay(10);      
 		}
 	} 
 	
-	//Turn off the light
-	for(int i = 0; i<=255; i++)
-	{
-		long y = cal_circle_y(i, 255);  
-		
-#if DEBUG					
-		Serial.println(y);    
-#endif		
-		analogWrite(led,y);
-		delay(10);      
-	}    
-
-	while(!digitalRead(pir))
-	{
-		long static counter = 0;
-		delay(1);
-		counter ++;
-		
-		if(500 <= counter) {
-			WTD.doggieTickle();		
-			counter = 0;
-		}
-	};
-	
+	delay(20);    	
 	WTD.doggieTickle();
 }
 

@@ -69,7 +69,7 @@ void setup()
   pinMode (10,OUTPUT);   
   for(int i=0;i<2;i++)
   {
-    analogWrite(10,10);  //10 is pwm output duty/256
+    analogWrite(10,5);  //10 is pwm output duty/256
     delay(500);
     analogWrite(10,0);     
     delay(500);  

@@ -27,6 +27,19 @@
 //DeBug  switch 
 #define  DeBug   0
 
+//hardware IO definition
+#define BUTTON         2
+#define LIGHT_SENSOR   A0
+#define CHRG_LED       A3  //low-level work
+#define PWR_HOLD       A1  
+#define PWR            6   //low-level work
+#define KEY            2
+#define LED            10  
+#define OUT_PIN1       3   //normal output pin
+#define OUT_PIN2       5
+#define IN_PIN1        A5  //normal input pin
+#define IN_PIN2        A4
+
 //Libraries
 #include <EEPROM.h>
 #include "TM1637.h"
@@ -42,129 +55,129 @@ int end = 0;
 
 // =========  Setup  =========
 void setup()
-{		   
-	//power up
-	pinMode(6, OUTPUT);
-	digitalWrite(6, LOW);
-	
-	WTD.watchdogSetup();
-	WTD.doggieTickle();
-	
-	pinMode (linefinder,INPUT);
-	tm1637.init();
-	tm1637.set(BRIGHT_TYPICAL);	
-	tm1637.clearDisplay();
-	tm1637.display(3,0);
-	
-#if 0	// Don't erase eeprom when restarting
-	if (EEPROM.read(3)!=0)
-	{
-		for(int i=0;i<10;i++)EEPROM.write(i,0);
-		
-	}
-#endif	
-	
+{       
+  //power up
+  pinMode(CHRG_LED, OUTPUT);
+  digitalWrite(CHRG_LED, LOW);
+  
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
+  
+  pinMode (linefinder,INPUT);
+  tm1637.init();
+  tm1637.set(BRIGHT_TYPICAL);  
+  tm1637.clearDisplay();
+  tm1637.display(3,0);
+  
+#if 0  // Don't erase eeprom when restarting
+  if (EEPROM.read(3)!=0)
+  {
+    for(int i=0;i<10;i++)EEPROM.write(i,0);
+    
+  }
+#endif  
+  
 //==============================//
-	pinMode (10,OUTPUT);
-	for(int i=0;i<2;i++)
-	{
+  pinMode (10,OUTPUT);
+  for(int i=0;i<2;i++)
+  {
         digitalWrite(10,HIGH);
         delay(500);
-        digitalWrite(10,LOW); 		
-        delay(500);	
+        digitalWrite(10,LOW);     
+        delay(500);  
         WTD.doggieTickle();
-	}
-	//while(1);   //debug  watchdog 	
-#if DeBug	
+  }
+  //while(1);   //debug  watchdog   
+#if DeBug  
     Serial.begin(9600);
-	Serial.println("start");
-#endif  	
-//==============================//	
+  Serial.println("start");
+#endif    
+//==============================//  
 
 }
 
 // =========  Loop  =========
 void loop()
-{			
+{      
 
 
-	WTD.doggieTickle();
+  WTD.doggieTickle();
          
     // Keep reading from eeprom ,then display data on 4-digital segment
-	num_money = EEPROM.read(1);
-	num_money = num_money << 8;	                   // Read form eeprom 
-	num_money = num_money + EEPROM.read(0);	
-	
-	display_seg(num_money);   
+  num_money = EEPROM.read(1);
+  num_money = num_money << 8;                     // Read form eeprom 
+  num_money = num_money + EEPROM.read(0);  
+  
+  display_seg(num_money);   
 
     // If detect proximity
-	if (digitalRead(linefinder)==LOW)                  // When detect proximity ,output LOW  
-	{
-		begin = millis();
-		num_money ++;
-		display_seg(num_money);                    // Display  		
+  if (digitalRead(linefinder)==LOW)                  // When detect proximity ,output LOW  
+  {
+    begin = millis();
+    num_money ++;
+    display_seg(num_money);                    // Display      
 
-#if DeBug  		
-		Serial.println(num_money);
-#endif 	
-	    for(int i=0; i<2;i++)
-		{
-		        EEPROM.write(i,num_money & 0xff);        // Write into eeprom  
-		        num_money = num_money >> 8;	
-		}
+#if DeBug      
+    Serial.println(num_money);
+#endif   
+      for(int i=0; i<2;i++)
+    {
+            EEPROM.write(i,num_money & 0xff);        // Write into eeprom  
+            num_money = num_money >> 8;  
+    }
 
-	    while (digitalRead(linefinder) ==LOW)
-		{
-			
-			WTD.doggieTickle();
-			end = millis();
-			if (end - begin >3000)
-			{
-				num_money = 0;
-				for(int i=0; i<2;i++)
-				{
-					EEPROM.write(i,0);
-				}					
-				tm1637.clearDisplay();
-				tm1637.display(3,0);
-				//Serial.println("zero");
-			}
-		}
-	}
+      while (digitalRead(linefinder) ==LOW)
+    {
+      
+      WTD.doggieTickle();
+      end = millis();
+      if (end - begin >3000)
+      {
+        num_money = 0;
+        for(int i=0; i<2;i++)
+        {
+          EEPROM.write(i,0);
+        }          
+        tm1637.clearDisplay();
+        tm1637.display(3,0);
+        //Serial.println("zero");
+      }
+    }
+  }
 }
 
 void display_seg(uint16_t num_money)
 {
-	ListDisp[0] = num_money%10;
-	ListDisp[1] = (num_money/10)%10;	
-	ListDisp[2] = (num_money/100)%10;
-	ListDisp[3] = (num_money/1000)%10;	
+  ListDisp[0] = num_money%10;
+  ListDisp[1] = (num_money/10)%10;  
+  ListDisp[2] = (num_money/100)%10;
+  ListDisp[3] = (num_money/1000)%10;  
 
-	if (ListDisp[3]!=0)
-	{
-		tm1637.display(0,ListDisp[3]);
-		tm1637.display(1,ListDisp[2]); 
-		tm1637.display(2,ListDisp[1]);
-		tm1637.display(3,ListDisp[0]);			
-	}
-	
-	if ((ListDisp[3]==0)&&(ListDisp[2]!=0))
-	{
-		tm1637.display(1,ListDisp[2]); 
-		tm1637.display(2,ListDisp[1]);
-		tm1637.display(3,ListDisp[0]);	
-	}
+  if (ListDisp[3]!=0)
+  {
+    tm1637.display(0,ListDisp[3]);
+    tm1637.display(1,ListDisp[2]); 
+    tm1637.display(2,ListDisp[1]);
+    tm1637.display(3,ListDisp[0]);      
+  }
+  
+  if ((ListDisp[3]==0)&&(ListDisp[2]!=0))
+  {
+    tm1637.display(1,ListDisp[2]); 
+    tm1637.display(2,ListDisp[1]);
+    tm1637.display(3,ListDisp[0]);  
+  }
 
-	if ((ListDisp[3]==0)&&(ListDisp[2]==0)&&(ListDisp[1]!=0))
-	{
-		tm1637.display(2,ListDisp[1]);
-		tm1637.display(3,ListDisp[0]);		
-	}
+  if ((ListDisp[3]==0)&&(ListDisp[2]==0)&&(ListDisp[1]!=0))
+  {
+    tm1637.display(2,ListDisp[1]);
+    tm1637.display(3,ListDisp[0]);    
+  }
         
-	if ((ListDisp[3]==0)&&(ListDisp[2]==0)&&(ListDisp[1]==0)&&(ListDisp[0]!=0))
-	{
-		tm1637.display(3,ListDisp[0]);		
-	}
+  if ((ListDisp[3]==0)&&(ListDisp[2]==0)&&(ListDisp[1]==0)&&(ListDisp[0]!=0))
+  {
+    tm1637.display(3,ListDisp[0]);    
+  }
 
 }
 

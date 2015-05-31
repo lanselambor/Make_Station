@@ -41,35 +41,35 @@
 
 #define LINE_FINDER_FIND       (LOW == digitalRead(IN_PIN1))   //something cover the sensor
 #define LINE_FINDER_NOTFIND    (HIGH == digitalRead(IN_PIN1)) //nothing cover the sensor
+#define TIME_TO_DRINK          2700000   //unit: Ms. 2700000 Ms = 45 Min, time for not drinking water 
+#define SPEAK_DURATION         4         //2 s
 
 const int linefinder               = IN_PIN1;
 const int recorder                 = OUT_PIN1;
-const unsigned long time_to_drink  = 2700000;   //unit: Ms. 2700000 Ms = 45 Min, time for not drinking water 
+
 volatile unsigned long timeCounter = 0;
 void setup()
-{	
-	//power up
-	pinMode(CHRG_LED, OUTPUT);
-	digitalWrite(CHRG_LED, LOW);
-	
+{  
+  //power up
+  pinMode(CHRG_LED, OUTPUT);
+  digitalWrite(CHRG_LED, LOW);
+  
   //initial watchdog   
-	WTD.watchdogSetup();
-	WTD.doggieTickle();
-	
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
+  
   //initial devices
-	pinMode(linefinder,INPUT);    
-	pinMode(recorder, OUTPUT);
-	digitalWrite(recorder, LOW);
-	
-	LEDShine(2, 1000);
-	
-#if DeBug	
+  pinMode(linefinder,INPUT);    
+  pinMode(recorder, OUTPUT);
+  digitalWrite(recorder, LOW);
+  
+  LEDShine(2, 1000);
+  
+#if DeBug  
   Serial.begin(9600);
-	Serial.println("start");
-#endif  	
+  Serial.println("start");
+#endif    
   Timer1.initialize(50000);//timing for 50ms
-	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR 
-  noInterrupts();
 }
 
 void TimingISR(void)
@@ -78,34 +78,36 @@ void TimingISR(void)
 }
 
 void loop()
-{			
+{      
   if (LINE_FINDER_NOTFIND)
   {
-    speak(1,2);
+    speak(1, SPEAK_DURATION);
     while(LINE_FINDER_NOTFIND)
     {
       WTD.doggieTickle();
       delay(5);
     }
   }
-	else if (LINE_FINDER_FIND)
-	{
-    interrupts();
-		while(LINE_FINDER_FIND)
+  else if (LINE_FINDER_FIND)
+  {
+
+    Timer1.attachInterrupt(TimingISR);
+    while(LINE_FINDER_FIND)
     {
-      if( timeCounter * 50 > time_to_drink )
+      if( timeCounter * 50 > TIME_TO_DRINK )
       {
         #if DeBug
         Serial.print("duration: ");
         Serial.println(timeCounter * 50);
         #endif
-        speak(3, 10);
-        timeCounter = 0;  			
+        speak(3, SPEAK_DURATION);        
+        timeCounter = 0;
       } 
       WTD.doggieTickle();
-		}
-    noInterrupts();
-	}            
+    }
+    Timer1.detachInterrupt();
+    timeCounter = 0;
+  }            
 }
 
 /* Function   : void LEDShine(int times, int freqMs)
@@ -115,14 +117,14 @@ void loop()
 void LEDShine(int times, int freqMs)
 {
   pinMode (LED,OUTPUT);
-	for(int i=0;i<times;i++)
-	{
+  for(int i=0;i<times;i++)
+  {
         analogWrite(LED,5);
         delay(freqMs/2);
-        analogWrite(LED,0); 		
-        delay(freqMs/2);	
+        analogWrite(LED,0);     
+        delay(freqMs/2);  
         WTD.doggieTickle();
-	}
+  }
 }
 
 void speak(int times, int seconds)

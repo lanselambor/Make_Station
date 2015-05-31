@@ -1,11 +1,11 @@
 /*
-* Digital Sand Clock.ino
-* A demo for ChaiHuo ZaoWuBa Demo
+* Moisture Led.ino
+* A demo for ChaiHuo ZaoWuBa Demo T14014
 * 
 * Copyright (c) 2015 Seeed Technology Inc.
-* Auther     : Lmabor.Fang
+* Auther     : Jlambor.Fang
 * Create Time: May 2015
-* Change Log :
+* Change Log : 
 * 
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,8 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include "WatchDog.h"
-#include <Wire.h>
+#include <TimerOne.h>
+
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0
@@ -36,17 +37,25 @@
 #define IN_PIN1        A5  //normal input pin
 #define IN_PIN2        A4
 
-#define LIGHT_UP_TIME 60000//10*60*1000  1 minute delay
+#define SWITCH         A5
+#define VIBRATOR       3
+#define TIMEUP         4  //4 s
 
-int led = 3;  //led control output pin
-int pir = A5;   //PIR_Sensor input pin
+unsigned long timeCounter = 0;
 
-void setup() {
+void setup()
+{
+
   WTD.watchdogSetup();
   WTD.doggieTickle();
-  
+    
+  //power up
   pinMode(CHRG_LED, OUTPUT);
   digitalWrite(CHRG_LED, LOW);
+  
+  pinMode(SWITCH, INPUT);
+  digitalWrite(SWITCH, HIGH);
+  pinMode(VIBRATOR, OUTPUT);
   
   pinMode (10,OUTPUT);
   for(int i=0;i<2;i++)
@@ -58,55 +67,51 @@ void setup() {
     WTD.doggieTickle();
   }
   
-  pinMode(led, OUTPUT);
-  pinMode(pir, INPUT);
-  analogWrite(led,255);
-  delay(500);
+  Serial.begin(9600);
+  Timer1.initialize(500000);//timing for 500ms
 }
 
-void loop() {
-  if(digitalRead(pir))
-  {    
-    //turn on the light
-    for(int i=255; i >= 0; i--)
-    {
-      long y = cal_circle_y(i, 255);   
-      analogWrite(led,y);
-      
-      WTD.doggieTickle();
-      delay(10);      
-    }   
-    
-    unsigned long begin = millis();
-    
-    while(LIGHT_UP_TIME > millis() - begin)
-    {
-      if(digitalRead(pir))
-      {
-        begin = millis();
-      }
-      
-      WTD.doggieTickle();  
-      delay(10);
-    }
-    
-    //Turn off the light
-    for(int i = 0; i<=255; i++)
-    {
-      long y = cal_circle_y(i, 255);    
-      analogWrite(led,y);
-      
-      WTD.doggieTickle();
-      delay(10);      
-    }
-  } 
-  
-  delay(20);      
-  WTD.doggieTickle();
-}
 
-//r * r = (x-r)*(x-r) + y * y 
-long cal_circle_y(long x, long r)
+void loop()
 {
-    return sqrt((r * r) - (x - r) * (x - r));
+  if(HIGH == digitalRead(SWITCH))
+  {
+    vibrate(1);        
+    while(HIGH == digitalRead(SWITCH))
+    {
+      WTD.doggieTickle();
+      delay(50);
+    }
+  }
+  else if(LOW == digitalRead(SWITCH))
+  {
+    Timer1.attachInterrupt(TimingISR);
+    while(LOW == digitalRead(SWITCH))
+    {
+      if(TIMEUP < timeCounter/2)
+      {
+        vibrate(1);        
+      } 
+      WTD.doggieTickle();
+    }    
+    Timer1.detachInterrupt();    
+    timeCounter = 0;
+  }
+  WTD.doggieTickle(); 
 }
+
+void TimingISR()
+{
+  timeCounter++; 
+  Serial.println(digitalRead(SWITCH));
+}
+
+void vibrate(float freq)
+{
+  int ms = (int)freq / 2.0 * 1000;
+  digitalWrite(VIBRATOR, HIGH);
+  delay(ms);
+  digitalWrite(VIBRATOR, LOW);
+  delay(ms);
+}
+

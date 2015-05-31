@@ -40,70 +40,70 @@ Ultrasonic ultrasonicAir(ultrasonic_pin);
 
 void setup()
 { 
-	//power up
-	pinMode(6, OUTPUT);
-	digitalWrite(6, LOW);
-	
-	WTD.watchdogSetup();
-	WTD.doggieTickle();
-	
-	pinMode(vibration_pin,OUTPUT);
-	pinMode(ultrasonic_pin,INPUT);
-		
-	pinMode (10,OUTPUT);
-	for(int i=0;i<2;i++)
-	{
-		digitalWrite(10,HIGH);
-		delay(500);
-		digitalWrite(10,LOW); 		
-		delay(500);	
-		WTD.doggieTickle();
-	}
-	
-	Timer1.initialize(50000);//timing for 50ms
-	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
-	
-#if DeBug	
+  //power up
+  pinMode(6, OUTPUT);
+  digitalWrite(6, LOW);
+  
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
+  
+  pinMode(vibration_pin,OUTPUT);
+  pinMode(ultrasonic_pin,INPUT);
+    
+  pinMode (10,OUTPUT);
+  for(int i=0;i<2;i++)
+  {
+    digitalWrite(10,HIGH);
+    delay(500);
+    digitalWrite(10,LOW);     
+    delay(500);  
+    WTD.doggieTickle();
+  }
+  
+  Timer1.initialize(50000);//timing for 50ms
+  Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
+  
+#if DeBug  
     Serial.begin(9600);
-	Serial.println("start");
-#endif  	
+  Serial.println("start");
+#endif    
 
 }
 
 void TimingISR(void)
 {   
-	distance = ultrasonicAir.MeasureInCentimeters(); 
-	timing += 50;
+  distance = ultrasonicAir.MeasureInCentimeters(); 
+  timing += 50;
 }
 
 void vibration()
 {
-	digitalWrite(vibration_pin, HIGH);
-	delay(500);
-	digitalWrite(vibration_pin, LOW);
-	delay(500);
+  digitalWrite(vibration_pin, HIGH);
+  delay(500);
+  digitalWrite(vibration_pin, LOW);
+  delay(500);
 }
 void loop()
 {                   
 
-	WTD.doggieTickle();
-	if(distance > MAN_LEAVE)   //No Man sitting in
-	{
-		timing = 0;
-	}
-	else if((timing >= 5000) && (distance <= MAN_LEAVE))  //Man sitting in
-	{
-		timing = 5000;
-		vibration();
-		WTD.doggieTickle();
-	}
-		
-	
+  WTD.doggieTickle();
+  if(distance > MAN_LEAVE)   //No Man sitting in
+  {
+    timing = 0;
+  }
+  else if((timing >= 5000) && (distance <= MAN_LEAVE))  //Man sitting in
+  {
+    timing = 5000;
+    vibration();
+    WTD.doggieTickle();
+  }
+    
+  
 #if DeBug
-	Serial.print("Ult = ");
-	Serial.println(distance);
-#endif		    						
-	delay(100);       
-	WTD.doggieTickle();   
+  Serial.print("Ult = ");
+  Serial.println(distance);
+#endif                    
+  delay(100);       
+  WTD.doggieTickle();   
     
 }

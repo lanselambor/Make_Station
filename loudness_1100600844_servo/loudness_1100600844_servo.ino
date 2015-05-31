@@ -24,13 +24,27 @@
 #include "WatchDog.h"
 #include "VisualScope.h"
 #include <Wire.h>
+#include <Servo.h>
+ 
+#define  DEBUG   0
 
+#define BUTTON         2
+#define LIGHT_SENSOR   A0
+#define CHRG_LED       A3  //low-level work
+#define PWR_HOLD       A1  
+#define PWR            6   //low-level work
+#define KEY            2
+#define LED            10  
+#define OUT_PIN1       3   //normal output pin
+#define OUT_PIN2       5
+#define IN_PIN1        A5  //normal input pin
+#define IN_PIN2        A4
+
+#if DEBUG
 VisualScope vs;
+#endif
 
-//DeBug  switch 
-#define  DeBug   1
-
-#include <Servo.h> 
+ 
 // Servo position begin value
 #define pos_begin  80
 // Servo position end value
@@ -50,163 +64,163 @@ int thershold_off = 30;
 //sound threshold
 int Threshold[5] = {40 + thershold_off, 
                     60 + thershold_off, 
-					80 + thershold_off,
-					100 + thershold_off, 
-					120 + thershold_off};
+                    80 + thershold_off,
+                    100 + thershold_off, 
+                    120 + thershold_off};
    
 
 const long interval = 50;
 unsigned long previousMillis = 0;
 unsigned long currentMillis  = 0;
 
+int midNum(int *a, int *b, int *c);
+int average_filter(int analog_pin, int num);
+int mid_filter(int analog_pin);
+void delay_feed( int val);
 
 void setup()
 { 
-	//power up
-	pinMode(6, OUTPUT);
-	digitalWrite(6, LOW);
-	
-	//initial watchdog  
-	WTD.watchdogSetup();
-	WTD.doggieTickle();
+  //power up
+  pinMode(CHRG_LED, OUTPUT);
+  digitalWrite(CHRG_LED, LOW);
+  
+  //initial watchdog  
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
 
-	//get quiet sound value
-	delay(500);
-	long tmp = 0;
-	for(int i = 0;i<1000;i++)
-	{
-		tmp += analogRead(pin_sound);
-	}
-	quiet_value = tmp / 1000;
+  //get quiet sound value
+  delay(500);
+  long tmp = 0;
+  for(int i = 0;i<1000;i++)
+  {
+    tmp += analogRead(pin_sound);
+  }
+  quiet_value = tmp / 1000;
 
-	pinMode (10,OUTPUT);
-	for(int i=0;i<2;i++)
-	{
-		digitalWrite(10,HIGH);
-		delay(500);
-		digitalWrite(10,LOW);     
-		delay(500);  
-		WTD.doggieTickle();
-	} 
+  pinMode (10,OUTPUT);
+  for(int i=0;i<2;i++)
+  {
+    analogWrite(10,5);
+    delay(500);
+    analogWrite(10,0);     
+    delay(500);  
+    WTD.doggieTickle();
+  } 
 
-	#if DeBug  
-	Serial.begin(9600);
-	Serial.println("start");
-	#endif    
-	//============ end ===========//  
+  #if DEBUG  
+  Serial.begin(9600);
+  Serial.println("start");
+  #endif    
 
-	myservo.attach(3);  //    mini fan use pin 9   joint use pin 3
-	previousMillis = millis();
-	myservo.write(90); 
+  myservo.attach(3);  //    mini fan use pin 9   joint use pin 3
+  previousMillis = millis();
+  myservo.write(90); 
 
 }
 
-// =========  Loop  =========
 void loop()
 {  
-	currentMillis = millis();
+  currentMillis = millis();
   
   if(currentMillis - previousMillis > interval)
   {  
     WTD.doggieTickle();                 
     val_sound = average_filter(pin_sound, 50); 
-	
-#if DeBug	
-	vs.Data_acquisition(val_sound,quiet_value,0,0);
-	//Serial.println (val_sound);
-#endif	
+  
+#if DEBUG  
+  vs.Data_acquisition(val_sound,quiet_value,0,0);
+  //Serial.println (val_sound);
+#endif  
    
-	int threshold = val_sound - quiet_value;
-	if((threshold > Threshold[4]))
-    {         
-		myservo.write(pos_begin - 30);   
-		delay_feed(5*80);
-		myservo.write(pos_end + 30);    
-		delay_feed(5*80);
-    }
-	else if((threshold > Threshold[3]))
-    {       
-		myservo.write(pos_begin - 20);   
-		delay_feed(5*60);
-		myservo.write(pos_end + 20);    
-		delay_feed(5*60);
-    }
-	else if((threshold > Threshold[2]))
-    {         
-		myservo.write(pos_begin - 10);   
-		delay_feed(5*40);
-		myservo.write(pos_end + 10);    
-		delay_feed(5*40);
-    }
-	else if((threshold > Threshold[1]))
-    {     
-		myservo.write(pos_begin);   
-		delay_feed(5*20);
-		myservo.write(pos_end);    
-		delay_feed(5*20);
-    }	
-    else if((threshold > Threshold[0]))
-    {         
-		myservo.write(pos_begin - 10);   
-		delay_feed(5*10);
-		myservo.write(pos_end + 10);    
-		delay_feed(5*10);
-    }              
-                                     	                    
-    previousMillis = millis(); 
-    
-    WTD.doggieTickle(); 
-	//delay(80);
+  int threshold = val_sound - quiet_value;
+  if(threshold > Threshold[4])
+  {         
+    myservo.write(pos_begin - 30);   
+    delay_feed(5*80);
+    myservo.write(pos_end + 30);    
+    delay_feed(5*80);
+  }
+  else if(threshold > Threshold[3])
+  {       
+    myservo.write(pos_begin - 20);   
+    delay_feed(5*60);
+    myservo.write(pos_end + 20);    
+    delay_feed(5*60);
+  }
+  else if(threshold > Threshold[2])
+  {         
+    myservo.write(pos_begin - 10);   
+    delay_feed(5*40);
+    myservo.write(pos_end + 10);    
+    delay_feed(5*40);
+  }
+  else if(threshold > Threshold[1])
+  {     
+    myservo.write(pos_begin);   
+    delay_feed(5*20);
+    myservo.write(pos_end);    
+    delay_feed(5*20);
+  }  
+  else if(threshold > Threshold[0])
+  {         
+    myservo.write(pos_begin - 10);   
+    delay_feed(5*10);
+    myservo.write(pos_end + 10);    
+    delay_feed(5*10);
+  }              
+  previousMillis = millis();     
+  WTD.doggieTickle();   
   }  
 }
 
 // Delay with feed dog
 void delay_feed( int val)
 {
-	delay(val);
-	WTD.doggieTickle(); 
-
+  delay(val);
+  WTD.doggieTickle(); 
 }
+
 int mid_filter(int analog_pin)
 {
-	int a = analogRead(analog_pin);
-	delayMicroseconds(10);
-	int b = analogRead(analog_pin);
-	delayMicroseconds(10);
-	int c = analogRead(analog_pin);
-	delayMicroseconds(10);
-	
-	return midNum(&a, &b, &c);
+  int a = analogRead(analog_pin);
+  delayMicroseconds(10);
+  int b = analogRead(analog_pin);
+  delayMicroseconds(10);
+  int c = analogRead(analog_pin);
+  delayMicroseconds(10);
+  
+  return midNum(&a, &b, &c);
 }
+
 int average_filter(int analog_pin, int num)
 {
   long temp = 0;
   for(int i=0;i<num;i++)
   {
     //temp += analogRead(analog_pin);    
-	temp += mid_filter(analog_pin);    
+    temp += mid_filter(analog_pin);    
   }
   return temp/num;
 }
 
 int midNum(int *a, int *b, int *c)
 {
-	int tmp = 0;
-	if(*a > *b){
-		tmp = *a;
-		*a = *b;
-		*b = tmp;
-	}
-	if(*b > *c){
-		tmp = *b;
-		*b = *c;
-		*c = tmp;
-	}
-	if(*b > *c){
-		tmp = *b;
-		*b = *c;
-		*c = tmp;
-	}
-	return *b;
+  int tmp = 0;
+  if(*a > *b){
+    tmp = *a;
+    *a = *b;
+    *b = tmp;
+  }
+  if(*b > *c){
+    tmp = *b;
+    *b = *c;
+    *c = tmp;
+  }
+  if(*b > *c){
+    tmp = *b;
+    *b = *c;
+    *c = tmp;
+  }
+  return *b;
 }
 

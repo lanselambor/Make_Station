@@ -49,7 +49,7 @@ class MyTM1637
     boolean _PointFlag;     //_PointFlag=1:the clock point on
     MyTM1637(uint8_t, uint8_t);
     void init(void);        //To clear the display
-    void writeByte(int8_t wr_data);//write 8bit data to tm1637
+    int writeByte(int8_t wr_data);//write 8bit data to tm1637
     void start(void);//send start bits
     void stop(void); //send stop bits
     void display(int8_t DispData[],uint8_t DispFlag);
@@ -59,6 +59,7 @@ class MyTM1637
     void point(boolean PointFlag);//whether to light the clock point ":".To take effect the next time it displays.
     void coding(int8_t DispData[],uint8_t DispFlag); 
     int8_t coding(int8_t DispData,uint8_t DispFlag); 
+    void bitDelay(void);
   private:
     uint8_t Clkpin;
     uint8_t Datapin;

@@ -27,6 +27,18 @@
 
 #define DEBUG 0   //enable debug
 
+#define BUTTON         2
+#define LIGHT_SENSOR   A0
+#define CHRG_LED       A3  //low-level work
+#define PWR_HOLD       A1  
+#define PWR            6   //low-level work
+#define KEY            2
+#define LED            10  
+#define OUT_PIN1       3   //normal output pin
+#define OUT_PIN2       5
+#define IN_PIN1        A5  //normal input pin
+#define IN_PIN2        A4
+
 #define MOTOR_SPEED 2
 #define TIMER_TIME 50000   //interrupt time 50ms
 #define THRESHOLD 30
@@ -40,41 +52,41 @@ volatile bool Motor_Sleep = false;
 
 void setup() 
 { 
-	//power up
-	pinMode(6, OUTPUT);
-	digitalWrite(6, LOW);
-	
-	//initial WatchDog
-	WTD.watchdogSetup();
-	WTD.doggieTickle();
-
-	Serial.begin(9600);
-	pinMode(sound_pin, INPUT);
-	pinMode(motor,OUTPUT);
-
-	//calculate out a quiet starting average value 
-	delay(100);
-	long tmp = 0, sample_num = 1000;
-	for(int i=0; i<sample_num; i++)
-	{
-		tmp += analogRead(sound_pin);
-		delayMicroseconds(10);
-	}
-	quiet_value = tmp / sample_num;  
-	
-	//start light
-	pinMode (10,OUTPUT);
-	for(int i=0;i<2;i++)
-	{
-		digitalWrite(10,HIGH);
-		delay(500);
-		digitalWrite(10,LOW);     
-		delay(500);  
-		WTD.doggieTickle();
-	}
+  //power up
+  pinMode(CHRG_LED, OUTPUT);
+  digitalWrite(CHRG_LED, LOW);
   
-	Timer1.initialize(TIMER_TIME);//timing for 50ms
-	Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
+  //initial WatchDog
+  WTD.watchdogSetup();
+  WTD.doggieTickle();
+
+  Serial.begin(9600);
+  pinMode(sound_pin, INPUT);
+  pinMode(motor,OUTPUT);
+
+  //calculate out a quiet starting average value 
+  delay(100);
+  long tmp = 0, sample_num = 1000;
+  for(int i=0; i<sample_num; i++)
+  {
+    tmp += analogRead(sound_pin);
+    delayMicroseconds(10);
+  }
+  quiet_value = tmp / sample_num;  
+  
+  //start light
+  pinMode (10,OUTPUT);
+  for(int i=0;i<2;i++)
+  {
+    analogWrite(10,5);
+    delay(500);
+    analogWrite(10,0);     
+    delay(500);  
+    WTD.doggieTickle();
+  }
+  
+  Timer1.initialize(TIMER_TIME);//timing for 50ms
+  Timer1.attachInterrupt(TimingISR);//declare the interrupt serve routine:TimingISR  
 }
 
 void TimingISR(void)
@@ -92,19 +104,19 @@ void TimingISR(void)
 
 void loop() 
 {
-	if( THRESHOLD < (sound_value - quiet_value ) )
-	{
-		analogWrite(motor, MOTOR_SPEED);
-		delay(50);
-	}
-	analogWrite(motor, 0);   
-	delay(80);
+  if( THRESHOLD < (sound_value - quiet_value ) )
+  {
+    analogWrite(motor, MOTOR_SPEED);
+    delay(50);
+  }
+  analogWrite(motor, 0);   
+  delay(80);
   
 #if DEBUG  
-	Data_acquisition(sound_value,sound_value - quiet_value,quiet_value,0);
+  Data_acquisition(sound_value,sound_value - quiet_value,quiet_value,0);
 #endif  
-	WTD.doggieTickle();
-	delay(20);
+  WTD.doggieTickle();
+  delay(20);
 }
 
 #if DEBUG

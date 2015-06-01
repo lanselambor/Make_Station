@@ -29,7 +29,7 @@
 VisualScope VS;
 
 //DeBug  switch 
-#define DeBug   0
+#define DeBug   1
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0
@@ -47,6 +47,7 @@ VisualScope VS;
 #define LIGHT_PIN      3
 #define sound_pin      A5
 #define PIN            LIGHT_PIN
+#define LIMIT_VALUE    60
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -62,8 +63,15 @@ void setup()
       
   WTD.watchdogSetup();
   WTD.doggieTickle();
+   
+  //initial sound sensor
+  long tmp=0, ave_num = 1000;
   
-  pixels.begin(); 
+  for(int i=0;i<ave_num;i++)
+  {
+    tmp += analogRead(sound_pin);    
+  }  
+  quiet_value = tmp / ave_num;  
   
   pinMode (10,OUTPUT);
   for(int i=0;i<2;i++)
@@ -75,40 +83,32 @@ void setup()
     WTD.doggieTickle();
   }  
 
-  //initial sound sensor
-  long tmp=0, ave_num = 1000;
-  
-  for(int i=0;i<ave_num;i++)
-  {
-    tmp += analogRead(sound_pin);    
-  }  
-  quiet_value = tmp / ave_num;
+  pixels.begin();
   
 #if DeBug  
-    Serial.begin(9600);
+  Serial.begin(9600);
   Serial.println("start");
 #endif    
-//==============================//  
-
 }
 
-// =========  Loop  =========
 void loop()
-{
-  WTD.doggieTickle();
-    delay(10);
-    val_sound = analogRead(sound_pin);   
+{  
+    val_sound = average_filter(sound_pin, 10);   
   
 #if DeBug 
-  VS.Data_acquisition(val_sound,0,0,0);  
-    //Serial.println(val_sound);  
+    //VS.Data_acquisition(val_sound,0,0,0);
+    Serial.print("D-value is ");  
+    Serial.println(val_sound - quiet_value);  
 #endif    
 
-    if (50 < (val_sound - quiet_value))action_rgbled_on ();  
-      else action_rgbled_off ();
-  
-  
-
+    if (LIMIT_VALUE < (val_sound - quiet_value))    
+    {
+      action_rgbled_on ();  
+    }
+    else action_rgbled_off ();
+    
+    WTD.doggieTickle();
+    delay(10);
 }
 void action_rgbled_on()
 {
@@ -174,3 +174,46 @@ void action_rgbled_off ()
         }  
 }
 
+int average_filter(int analog_pin, int num)
+{
+  long temp = 0;
+  for(int i=0;i<num;i++)
+  {
+    //temp += analogRead(analog_pin);    
+    temp += mid_filter(analog_pin);    
+  }
+  return temp/num;
+}
+
+int mid_filter(int analog_pin)
+{
+  int a = analogRead(analog_pin);
+  delayMicroseconds(10);
+  int b = analogRead(analog_pin);
+  delayMicroseconds(10);
+  int c = analogRead(analog_pin);
+  delayMicroseconds(10);
+  
+  return midNum(&a, &b, &c);
+}
+
+int midNum(int *a, int *b, int *c)
+{
+  int tmp = 0;
+  if(*a > *b){
+    tmp = *a;
+    *a = *b;
+    *b = tmp;
+  }
+  if(*b > *c){
+    tmp = *b;
+    *b = *c;
+    *c = tmp;
+  }
+  if(*b > *c){
+    tmp = *b;
+    *b = *c;
+    *c = tmp;
+  }
+  return *b;
+}

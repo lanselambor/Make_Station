@@ -39,7 +39,7 @@
 #define IN_PIN1        A5  //normal input pin
 #define IN_PIN2        A4
 
-#define MOTOR_SPEED 2
+#define MOTOR_SPEED 20
 #define TIMER_TIME 50000   //interrupt time 50ms
 #define THRESHOLD 30
 

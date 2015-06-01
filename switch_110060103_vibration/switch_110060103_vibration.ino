@@ -3,7 +3,7 @@
 * A demo for ChaiHuo ZaoWuBa Demo T14014
 * 
 * Copyright (c) 2015 Seeed Technology Inc.
-* Auther     : Jlambor.Fang
+* Auther     : lambor.Fang
 * Create Time: May 2015
 * Change Log : 
 * 
@@ -39,7 +39,7 @@
 
 #define SWITCH         A5
 #define VIBRATOR       3
-#define TIMEUP         4  //4 s
+#define TIMEUP         1*60  //45 minutes
 
 unsigned long timeCounter = 0;
 

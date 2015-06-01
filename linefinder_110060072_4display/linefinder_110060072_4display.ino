@@ -23,6 +23,8 @@
 */
 #include "WatchDog.h"
 #include <Wire.h>
+#include <EEPROM.h>
+#include "TM1637.h"
 
 //DeBug  switch 
 #define  DeBug   0
@@ -40,11 +42,9 @@
 #define IN_PIN1        A5  //normal input pin
 #define IN_PIN2        A4
 
-//Libraries
-#include <EEPROM.h>
-#include "TM1637.h"
 #define CLK 3      
 #define DIO 5
+
 TM1637 tm1637(CLK,DIO);
 int16_t ListDisp[4];
 

@@ -24,6 +24,7 @@
 #include "WatchDog.h"
 #include <TimerOne.h>
 
+#define DEBUG          0
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0
@@ -66,11 +67,19 @@ void setup()
     delay(500);  
     WTD.doggieTickle();
   }
-  
+#if DEBUG  
   Serial.begin(9600);
+#endif  
   Timer1.initialize(500000);//timing for 500ms
 }
 
+void TimingISR()
+{
+  timeCounter++;
+#if DEBUG  
+  Serial.println(digitalRead(SWITCH));
+#if DEBUG  
+}
 
 void loop()
 {
@@ -98,12 +107,6 @@ void loop()
     timeCounter = 0;
   }
   WTD.doggieTickle(); 
-}
-
-void TimingISR()
-{
-  timeCounter++; 
-  Serial.println(digitalRead(SWITCH));
 }
 
 void vibrate(float freq)

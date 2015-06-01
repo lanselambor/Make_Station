@@ -42,7 +42,7 @@
 #define LINE_FINDER_FIND       (LOW == digitalRead(IN_PIN1))   //something cover the sensor
 #define LINE_FINDER_NOTFIND    (HIGH == digitalRead(IN_PIN1)) //nothing cover the sensor
 #define TIME_TO_DRINK          2700000   //unit: Ms. 2700000 Ms = 45 Min, time for not drinking water 
-#define SPEAK_DURATION         4         //2 s
+#define SPEAK_DURATION         4         //4 s
 
 const int linefinder               = IN_PIN1;
 const int recorder                 = OUT_PIN1;
@@ -100,7 +100,7 @@ void loop()
         Serial.print("duration: ");
         Serial.println(timeCounter * 50);
         #endif
-        speak(3, SPEAK_DURATION);        
+        speak(3, SPEAK_DURATION);
         timeCounter = 0;
       } 
       WTD.doggieTickle();
@@ -131,11 +131,14 @@ void speak(int times, int seconds)
 {
   for(int i=0; i<times; i++)
   {
-    
     digitalWrite(recorder, HIGH);
     delaySeconds(seconds);    
     digitalWrite(recorder, LOW);
     delaySeconds(1);
+    if(LINE_FINDER_NOTFIND)
+    {
+      i = times;      
+    }
 
   }
 }

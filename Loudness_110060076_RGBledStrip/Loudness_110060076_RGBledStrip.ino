@@ -29,7 +29,7 @@
 VisualScope VS;
 
 //DeBug  switch 
-#define DeBug   1
+#define DeBug          0
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0
@@ -69,7 +69,8 @@ void setup()
   
   for(int i=0;i<ave_num;i++)
   {
-    tmp += analogRead(sound_pin);    
+    tmp += analogRead(sound_pin);
+    delayMicroseconds(10);
   }  
   quiet_value = tmp / ave_num;  
   
@@ -93,22 +94,22 @@ void setup()
 
 void loop()
 {  
-    val_sound = average_filter(sound_pin, 10);   
-  
+  val_sound = average_filter(sound_pin, 10);   
+
 #if DeBug 
-    //VS.Data_acquisition(val_sound,0,0,0);
-    Serial.print("D-value is ");  
-    Serial.println(val_sound - quiet_value);  
+  //VS.Data_acquisition(val_sound,0,0,0);
+  Serial.print("D-value is ");  
+  Serial.println(val_sound - quiet_value);  
 #endif    
 
-    if (LIMIT_VALUE < (val_sound - quiet_value))    
-    {
-      action_rgbled_on ();  
-    }
-    else action_rgbled_off ();
-    
-    WTD.doggieTickle();
-    delay(10);
+  if (LIMIT_VALUE < (val_sound - quiet_value))    
+  {
+    action_rgbled_on ();  
+  }
+  else action_rgbled_off ();
+  
+  WTD.doggieTickle();
+  delay(10);
 }
 void action_rgbled_on()
 {

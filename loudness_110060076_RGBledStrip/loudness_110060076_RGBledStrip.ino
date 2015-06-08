@@ -88,8 +88,7 @@ void loop()
   if(40 < (sound_value - last_value))
   {
     WTD.doggieTickle();
-    action_rgbled_on (); 
-    delay(100); 
+    action_rgbled_on ();    
     action_rgbled_off();
   }
   last_value = sound_value;

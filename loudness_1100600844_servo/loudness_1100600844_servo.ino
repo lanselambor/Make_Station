@@ -26,7 +26,7 @@
 #include <Wire.h>
 #include <Servo.h>
  
-#define  DEBUG   0
+#define  DEBUG   1
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0
@@ -44,7 +44,9 @@
 VisualScope vs;
 #endif
 
- 
+
+
+#define original_pos 90 
 // Servo position begin value
 #define pos_begin  80
 // Servo position end value
@@ -60,7 +62,7 @@ int quiet_value = 0;
 int val_sound = 0;
 
 //value off the thershold, 
-int thershold_off = 30;
+int thershold_off = 50;
 //sound threshold
 int Threshold[5] = {40 + thershold_off, 
                     60 + thershold_off, 
@@ -120,59 +122,34 @@ void setup()
 
 void loop()
 {  
-  currentMillis = millis();
-  
-  if(currentMillis - previousMillis > interval)
-  {  
-    WTD.doggieTickle();                 
-    val_sound = average_filter(pin_sound, 50); 
-  
-#if DEBUG  
-  vs.Data_acquisition(val_sound,quiet_value,0,0);
-  //Serial.println (val_sound);
-#endif  
-   
+  WTD.doggieTickle();                 
+  val_sound = average_filter(pin_sound, 50);       
   int threshold = val_sound - quiet_value;
-  if(threshold > Threshold[4])
-  {         
-    myservo.write(pos_begin - 30);   
-    delay_feed(5*80);
-    myservo.write(pos_end + 30);    
-    delay_feed(5*80);
-  }
-  else if(threshold > Threshold[3])
-  {       
-    myservo.write(pos_begin - 20);   
-    delay_feed(5*60);
-    myservo.write(pos_end + 20);    
-    delay_feed(5*60);
-  }
-  else if(threshold > Threshold[2])
-  {         
-    myservo.write(pos_begin - 10);   
-    delay_feed(5*40);
-    myservo.write(pos_end + 10);    
-    delay_feed(5*40);
-  }
-  else if(threshold > Threshold[1])
-  {     
-    myservo.write(pos_begin);   
-    delay_feed(5*20);
-    myservo.write(pos_end);    
-    delay_feed(5*20);
-  }  
-  else if(threshold > Threshold[0])
-  {         
-    myservo.write(pos_begin - 10);   
-    delay_feed(5*10);
-    myservo.write(pos_end + 10);    
-    delay_feed(5*10);
+  if(threshold > thershold_off)
+  {
+    Serial.println(threshold);
+    servoRun(threshold);
   }              
-  previousMillis = millis();     
   WTD.doggieTickle();   
-  }  
+  delay(200);  
 }
 
+void servoRun(int analog)
+{
+  int dec = 0;
+  if(analog < 200)
+  {  
+    dec = map(analog, thershold_off, 200, 2, 30);
+  }
+  else
+  {
+    dec = 30;
+  }
+  myservo.write(original_pos - dec);
+  delay(200);
+  myservo.write(original_pos + dec);
+  delay(200);
+}
 // Delay with feed dog
 void delay_feed( int val)
 {
@@ -223,4 +200,3 @@ int midNum(int *a, int *b, int *c)
   }
   return *b;
 }
-

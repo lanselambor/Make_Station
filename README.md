@@ -1,6 +1,9 @@
 # Make_Station
 Product codes for Make Station.
 
+###Notice
+* The Arduino IDE need to be above V1.64
+
 ###Arduino IDE Setting
 1.Tools --> board --> Arduino Fio <br>
 2.Tools --> Port --> ****         <br>

@@ -40,7 +40,7 @@
 #define IN_PIN2        A4
 
 #define MOTOR_SPEED 5
-#define THRESHOLD 30
+#define THRESHOLD 100
 
 int sound_pin = A5;
 int motor = 3;
@@ -82,7 +82,7 @@ void TimingISR(void)
 {   
   WTD.doggieTickle();
   sound_value = analogRead(sound_pin);
-  if(40 < (sound_value - last_value))
+  if(THRESHOLD < (sound_value - last_value))
   {
     motor_run_flag = true;
   }

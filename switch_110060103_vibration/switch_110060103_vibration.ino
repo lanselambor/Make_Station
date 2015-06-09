@@ -78,7 +78,7 @@ void TimingISR()
   timeCounter++;
 #if DEBUG  
   Serial.println(digitalRead(SWITCH));
-#if DEBUG  
+#endif  
 }
 
 void loop()

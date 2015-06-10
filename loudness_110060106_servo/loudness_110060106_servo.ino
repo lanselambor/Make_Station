@@ -26,7 +26,7 @@
 #include <Wire.h>
 #include <Servo.h>
  
-#define  DEBUG   1
+#define  DEBUG   0
 
 #define BUTTON         2
 #define LIGHT_SENSOR   A0

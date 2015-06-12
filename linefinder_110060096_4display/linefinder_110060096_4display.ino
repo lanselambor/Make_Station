@@ -81,9 +81,9 @@ void setup()
   pinMode (10,OUTPUT);
   for(int i=0;i<2;i++)
   {
-        digitalWrite(10,HIGH);
+        analogWrite(10,5);
         delay(500);
-        digitalWrite(10,LOW);     
+        analogWrite(10,0);     
         delay(500);  
         WTD.doggieTickle();
   }

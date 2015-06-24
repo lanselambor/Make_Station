@@ -1,0 +1,9 @@
+//hardware IO definition
+#define BUTTON         A0
+#define PWR_HOLD       A1  
+#define KEY            A0
+#define LED            10  
+#define OUT1           5   //normal output pin
+#define OUT2           6
+#define IN1            A5  //normal input pin
+#define IN2            A4

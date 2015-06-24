@@ -39,7 +39,8 @@ void TM1637::init(void)
 
 bool TM1637::writeByte(int8_t wr_data)
 {
-  uint8_t i,count1;   
+  uint8_t i,count1; 
+  uint8_t ack = 0;  
   for(i=0;i<8;i++)        //sent 8bit data
   {
     digitalWrite(Clkpin,LOW);      
@@ -66,10 +67,10 @@ bool TM1637::writeByte(int8_t wr_data)
     }
     pinMode(Datapin,INPUT);
   }
-#endif
-
+  pinMode(Datapin,OUTPUT);
+#else
   bitDelay();
-  uint8_t ack = digitalRead(Datapin);
+  ack = digitalRead(Datapin);
   if (ack == 0) 
   {
      pinMode(Datapin,OUTPUT);
@@ -78,8 +79,9 @@ bool TM1637::writeByte(int8_t wr_data)
   bitDelay();
   pinMode(Datapin,OUTPUT);
   bitDelay();
-  
+#endif  
   return ack;
+  
 }
 //send start signal to TM1637
 void TM1637::start(void)

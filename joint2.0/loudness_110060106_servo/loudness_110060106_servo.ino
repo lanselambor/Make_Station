@@ -79,6 +79,7 @@ int midNum(int *a, int *b, int *c);
 int average_filter(int analog_pin, int num);
 int mid_filter(int analog_pin);
 void delay_feed( int val);
+void servoRun(int analog);
 
 void setup()
 { 

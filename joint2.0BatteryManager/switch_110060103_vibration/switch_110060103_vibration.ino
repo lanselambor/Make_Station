@@ -41,7 +41,7 @@
 
 #define SWITCH         A5
 #define VIBRATOR       3
-#define TIMEUP         60//1*60  //45 minutes
+#define TIMEUP         45*60  //45 minutes
 
 unsigned long timeCounter = 0;
 

@@ -81,13 +81,13 @@ void loop() {
     
     while(LIGHT_UP_TIME > millis() - begin)
     {
-      if(digitalRead(pir))
-      {
-        begin = millis();
-      }
+      // if(digitalRead(pir))
+      // {
+      //   begin = millis();
+      // }
       
       WTD.doggieTickle();  
-      delay(10);
+      delay(100);
     }
     
     //Turn off the light
@@ -99,6 +99,7 @@ void loop() {
       WTD.doggieTickle();
       delay(10);      
     }
+    delay(1000);
   } 
   
   delay(20);      

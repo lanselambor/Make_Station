@@ -36,7 +36,7 @@
 #define IN_PIN1        A5  //normal input pin
 #define IN_PIN2        A4
 
-#define LIGHT_UP_TIME 60000//10*60*1000  1 minute delay
+#define LIGHT_UP_TIME 15000//unit ms - 15 seconds delay
 
 int led = 3;  //led control output pin
 int pir = A5;   //PIR_Sensor input pin
